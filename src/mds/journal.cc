@@ -1594,8 +1594,9 @@ void EMetaBlob::replay(MDS *mds, LogSegment *logseg, MDSlaveUpdate *slaveup)
       Session *session = mds->sessionmap.get_session(p->first.name);
       if (session) {
 	session->add_completed_request(p->first.tid, created);
-	if (p->second)
-	  session->trim_completed_requests(p->second);
+	if (p->second) {
+          mds->sessionmap.trim_completed_requests(session, p->second);
+        }
       }
     }
   }

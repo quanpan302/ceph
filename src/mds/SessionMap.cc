@@ -707,3 +707,9 @@ version_t SessionMap::mark_projected(Session *s)
   return projected;
 }
 
+void SessionMap::trim_completed_requests(Session *session, ceph_tid_t tid) {
+  if (session->trim_completed_requests(tid)) {
+    mark_dirty(session);
+  }
+}
+

@@ -227,18 +227,23 @@ public:
 
   // -- completed requests --
 private:
+  bool trim_completed_requests(ceph_tid_t mintid) {
+    // trim
+    bool modified = false;
+    while (!info.completed_requests.empty() && 
+	   (mintid == 0 || info.completed_requests.begin()->first < mintid)) {
+      modified = true;
+      info.completed_requests.erase(info.completed_requests.begin());
+    }
 
+    return modified;
+  }
 
 public:
   void add_completed_request(ceph_tid_t t, inodeno_t created) {
     info.completed_requests[t] = created;
   }
-  void trim_completed_requests(ceph_tid_t mintid) {
-    // trim
-    while (!info.completed_requests.empty() && 
-	   (mintid == 0 || info.completed_requests.begin()->first < mintid))
-      info.completed_requests.erase(info.completed_requests.begin());
-  }
+
   bool have_completed_request(ceph_tid_t tid, inodeno_t *pcreated) const {
     map<ceph_tid_t,inodeno_t>::const_iterator p = info.completed_requests.find(tid);
     if (p == info.completed_requests.end())
@@ -462,11 +467,7 @@ public:
     Session *session = get_session(rid.name);
     return session && session->have_completed_request(rid.tid, NULL);
   }
-  void trim_completed_requests(entity_name_t c, ceph_tid_t tid) {
-    Session *session = get_session(c);
-    assert(session);
-    session->trim_completed_requests(tid);
-  }
+  void trim_completed_requests(Session *session, ceph_tid_t tid);
 
   void wipe();
   void wipe_ino_prealloc();
