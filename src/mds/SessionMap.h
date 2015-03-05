@@ -342,7 +342,14 @@ protected:
 public:
   map<int,xlist<Session*>* > by_state;
   uint64_t set_state(Session *session, int state);
+
+  // Callbacks waiting for a particular version to be
+  // committed (i.e. save()'d)
   map<version_t, list<MDSInternalContextBase*> > commit_waiters;
+
+  // Callbacks waiting for a particular version to be
+  // dirtied (i.e. mark_dirty() is called)
+  map<version_t, list<MDSInternalContextBase*> > dirty_waiters;
 
   SessionMap(MDS *m) : mds(m),
 		       projected(0), committing(0), committed(0),
@@ -535,6 +542,15 @@ public:
    * and `projected` to account for that.
    */
   void replay_advance_version();
+
+
+  /**
+   * During log segment expiry, ensure that a set of
+   * sessions have been saved.
+   */
+  void dirty_and_save(
+      std::set<entity_name_t> sessions,
+      MDSInternalContextBase *on_saved);
 };
 
 
